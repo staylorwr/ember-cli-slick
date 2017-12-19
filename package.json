@@ -48,10 +48,9 @@
     "ember-cli-htmlbars": "^1.1.0",
     "broccoli-funnel": "^1.2.0",
     "broccoli-merge-trees": "^2.0.0",
-    "exists-sync": "^0.0.4",
-    "fastboot-transform": "^0.1.1"
+    "exists-sync": "^0.0.4"
   },
-  
+
   "ember-addon": {
     "configPath": "tests/dummy/config"
   }

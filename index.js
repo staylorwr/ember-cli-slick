@@ -5,7 +5,6 @@ var map = require('broccoli-stew').map;
 
 const Funnel = require('broccoli-funnel');
 const Merge = require('broccoli-merge-trees');
-const fastbootTransform = require('fastboot-transform');
 const path = require('path');
 const existSync = require('exists-sync');
 
@@ -22,32 +21,36 @@ module.exports = {
    *
    * @param {Broccoli} tree
    */
-  treeForVendor(tree) {
+  treeForVendor(defaultTree) {
     let trees = [];
 
-    if (tree) {
-      trees.push(tree);
-    }
     const app = this._findHost();
     const assetDir = path.join(this.project.root, app.bowerDirectory, 'slick-carousel', 'slick');
 
-    if (existSync(assetDir)) {
-      // Funnel the browser lib from bower with providing destDir as the lib (this is optional). If you don't
-      // provide `destDir` it will default to `vendor/yourlib.js`. If you provide destDir it will default to:
-      // `vendor/destDirName/yourlib.js`
-      const browserTrees = fastbootTransform(new Funnel(assetDir, {
-         files: ['slick.js'],
-         destDir: 'slick'
-       }));
-       trees.push(browserTrees);
+    let browserTrees = new Funnel(assetDir, {
+      destDir: 'slick',
+      files: ['slick.js']
+    });
+
+    browserTrees = map(browserTrees, (content, relativePath) => {
+      if (relativePath.indexOf('css') !== -1) {
+        return content;
+      }
+      return `if(typeof FastBoot === 'undefined') { ${content } }`;
+    });
+
+    if (defaultTree !== undefined) {
+      trees.push(defaultTree);
     }
+
+    trees.push(browserTrees);
 
     return new Merge(trees);
   },
 
 
   included: function(app) {
-    this._super.included(app);
+    this._super.included.apply(this, arguments);
 
     app.import(app.bowerDirectory + '/slick-carousel/slick/slick.css');
     app.import(app.bowerDirectory + '/slick-carousel/slick/slick-theme.css');
